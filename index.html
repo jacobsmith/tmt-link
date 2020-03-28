@@ -125,8 +125,11 @@
 
       inviteButton.addEventListener('click', function(event) {
         function formatPin(pin) {
+          console.log(pin);
           pin = pin.toString();
-          return pin.substring(0, 4) + '-' + pin.substring(4, 8) + '-' + pin.substring(8, 10)
+
+          // split into groups of 4
+          return (pin.match(/.{1,4}/g)).join('-');
         }
 
         alert(
