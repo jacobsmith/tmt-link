@@ -124,12 +124,17 @@
       });
 
       inviteButton.addEventListener('click', function(event) {
+        function formatPin(pin) {
+          pin = pin.toString();
+          return pin.substring(0, 4) + '-' + pin.substring(4, 8) + '-' + pin.substring(8, 10)
+        }
+
         alert(
           [
             'This is where we will send a text message saying: ',
             'Hello, ' + state.patientName + ' is in the hospital and trying to reach you. ',
-            'You may click on the link below to video chat with them, or dial ' + state.UKNumber + ' and enter the PIN ' + state.pinCode + ' to speak with them.',
-            '\n',
+            'You may click on the link below to video chat with them via Chrome on your computer, or dial \n' + state.UKNumber + ' and enter the PIN ' + formatPin(state.pinCode) + ' to speak with them.',
+            '\n\n',
             'https://meet.jit.si/' + state.roomName
           ].join(' ')
         );
