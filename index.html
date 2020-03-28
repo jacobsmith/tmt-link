@@ -1,0 +1,214 @@
+<html>
+  <head>
+    <script src="https://unpkg.com/libphonenumber-js@1.x/bundle/libphonenumber-mobile.js"></script>
+
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .primary-text {
+        padding: 28px;
+        text-align: center;
+      }
+
+      .phone-input {
+        padding: 12px;
+        height: 28px;
+      }
+
+      input {
+        border: 1px solid black;
+        border-radius: 4px;
+        height: 28px;
+        width: 200px;
+      }
+
+      .step-number {
+        background-color: #66bce4;
+        color: #071940;
+        width: 36px;
+        height: 36px;
+        border-radius: 36px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 12px;
+        font-size: 24px;
+      }
+
+      button {
+        background-color: #071940;
+        color: #66bce4;
+        border-radius: 4px;
+        border: none;
+        font-size: 20px;
+      }
+
+      button:disabled {
+        background-color: gray;
+      }
+    </style>
+  </head>
+
+  <body style="margin: 0; padding: 0;">
+    <div class="header" style="background-color: black; height: 50px; display: flex; align-items: center; padding: 8px;">
+      <img src="https://cdn.shortpixel.ai/client/to_webp,q_lossy,ret_img,w_2126/https://www.tmtfirst.co.uk/wp-content/uploads/2019/04/RS206_TMT-Logo-on-Black.png" style="width: 120px;" />
+    </div>
+
+    <div class="primary-text">
+      We're proud to provide this service free of charge for you to speak with friends and family.
+    </div>
+  
+    <div class="step">
+      <div class="step-number">1</div>
+      <div class="phone-input">
+        <label>Enter your name:</label>
+        <input id="patient-name" />
+      </div>
+    </div> 
+    
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="phone-input">
+        <label>Enter your friend or family member's phone number: +44</label>
+        <input id="phone-number" type="tel"/>
+      </div>
+    </div>
+    
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="phone-input">
+        <button id="invite-button" disabled>Invite </button>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <div class="phone-input">
+        <button id="join-call-button" disabled>Join Call</button>
+      </div>
+    </div>
+    
+    <!-- we initialize the iframe offpage so that jitsi will create the room and numbers, but we can simplify the login flow -->
+    <div id="meet" style="position: absolute; left: -9999px;"></div>
+
+    <script>
+      let state = {};
+      
+      const phoneInput = document.querySelector('#phone-number');
+      const inviteButton = document.querySelector('#invite-button');
+      const patientName = document.querySelector('#patient-name');
+      const joinCallButton = document.querySelector('#join-call-button');
+
+      patientName.addEventListener('input', function(event) {
+        state.patientName = event.target.value;
+      });
+
+      // update the button as the phone number is entered
+      phoneInput.addEventListener('input', function(event) {
+        const asYouType = new libphonenumber.AsYouType();
+        const rawNumber = '+44' + event.target.value;
+        formattedValue = asYouType.input(rawNumber);
+        console.log(formattedValue);
+
+        inviteButton.innerHTML = 'Invite ' + formattedValue; 
+
+        // valid number is of form: +44 xxx xxx xxxx
+        console.log(formattedValue.length);
+        if (formattedValue.length == 16) {
+          inviteButton.disabled = false;
+        } else {
+          inviteButton.disabled = true;
+        }
+      });
+
+      inviteButton.addEventListener('click', function(event) {
+        alert(
+          [
+            'This is where we will send a text message saying: ',
+            'Hello, ' + state.patientName + ' is in the hospital and trying to reach you. ',
+            'You may click on the link below to video chat with them, or dial ' + state.UKNumber + ' and enter the PIN ' + state.pinCode + ' to speak with them.'
+          ].join(' ')
+        );
+        joinCallButton.disabled = false;
+      });
+
+      joinCallButton.addEventListener('click', function(event) {
+        window.location = 'intent://meet.jit.si/' + state.roomName + '#jitsi_meet_external_api_id=0&config.enableWelcomePage=false&config.enableClosePage=false&interfaceConfig.GENERATE_ROOMNAMES_ON_WELCOME_PAGE=false&interfaceConfig.DISPLAY_WELCOME_PAGE_CONTENT=false&interfaceConfig.DEFAULT_REMOTE_DISPLAY_NAME=%22User%22&interfaceConfig.SHOW_CHROME_EXTENSION_BANNER=false&interfaceConfig.APP_NAME=%22TMT%20Link%22&interfaceConfig.SHOW_JITSI_WATERMARK=true&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=true&interfaceConfig.SETTINGS_SECTIONS=%5B%22devices%22%2C%22language%22%2C%22moderator%22%2C%22profile%22%5D#Intent;scheme=org.jitsi.meet;package=org.jitsi.meet;end'
+      });
+
+    </script>
+
+    <script src='https://meet.jit.si/external_api.js'></script> 
+    <script>
+        // https://github.com/jitsi/jitsi-meet/blob/master/config.js
+
+        // get a random number between 1 and 100,000,000 for the room
+        const roomName = 'TMTLink-' + Math.floor(Math.random() * 10**8);
+        state.roomName = roomName;
+
+        console.log(roomName);
+
+        const domain = 'meet.jit.si';
+        const options = {
+            roomName: roomName,
+            width: '100%',
+            height: '100%',
+            parentNode: document.querySelector('#meet'),
+            configOverwrite: {
+                enableWelcomePage: false,
+                enableWelcomePage: false,
+                enableClosePage: false,
+            },
+            interfaceConfigOverwrite: {
+                GENERATE_ROOMNAMES_ON_WELCOME_PAGE: false,
+                DISPLAY_WELCOME_PAGE_CONTENT: false,
+                DEFAULT_REMOTE_DISPLAY_NAME: 'User',
+                SHOW_CHROME_EXTENSION_BANNER: false,
+                APP_NAME: 'TMT Link',
+                SHOW_JITSI_WATERMARK: true,
+                SHOW_WATERMARK_FOR_GUESTS: true,
+                // TOOLBAR_BUTTONS: [
+                //     'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                //     'fodeviceselection', 'hangup', 'profile', 'info', 'chat',
+                //     'etherpad', 'settings', 'raisehand', 'recording', 'livestreaming',
+                //     'videoquality', 'filmstrip', 'invite', 'shortcuts',
+                //     'tileview', 'download', 'help', 'mute-everyone'
+                // ],
+                SETTINGS_SECTIONS: [ 'devices', 'language', 'moderator', 'profile' ],
+            }
+        };
+        const api = new JitsiMeetExternalAPI(domain, options);
+
+        fetch('https://jitsi-api.jitsi.net/phoneNumberList?conference=' + roomName, {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }).then((function(response) {
+          response.json().then(function(data) {
+            if (data.numbersEnabled) {
+              state.UKNumber = data.numbers['UK'];
+            }
+            console.log(state);
+          });
+        }))
+        .catch(function(error) {
+          state.error = error;
+          console.log('error: ', error);
+        });
+
+        fetch('https://api.jitsi.net/conferenceMapper?conference=' + roomName + '@conference.meet.jit.si').then(function(response) {
+          response.json().then(function(data) {
+            state.pinCode = data.id
+          })
+          .catch(function(error) {
+            state.error = error;
+            console.log('error')
+          })
+        });
+    </script>
+  </body>
+</html>
